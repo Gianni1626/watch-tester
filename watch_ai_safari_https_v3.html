@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>watch_ai_safari_https_v3</title>
+<style>
+:root{--bg:#0b1220;--panel:#121a2b;--panel2:#1b263b;--line:#334155;--text:#ecf2ff;--muted:#9db0d0;--ok:#16a34a;--warn:#d97706;--bad:#dc2626;--acc:#2563eb}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0}
+.wrap{max-width:1320px;margin:auto;padding:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:14px}
+h1,h2,h3{margin:0 0 10px}
+p{margin:0 0 10px;color:var(--muted)}
+.two{display:grid;gap:14px}
+.videoWrap{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3}
+video,canvas{display:block;width:100%;height:100%;object-fit:cover;background:#000}
+.toolbar{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.row2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.row4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.field{display:grid;gap:6px;margin-bottom:10px}
+label{font-size:12px;color:#cbd5e1;text-transform:uppercase;letter-spacing:.05em}
+input,textarea,button,select{width:100%;padding:13px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:16px}
+input[type="range"]{padding:0}
+textarea{min-height:90px;resize:vertical}
+button{cursor:pointer;border:none;font-weight:700;background:var(--acc)}
+button.ok{background:var(--ok)} button.warn{background:var(--warn)} button.bad{background:var(--bad)} button.secondary{background:#475569}
+.stats{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
+.stat{background:#0d1424;border:1px solid var(--line);border-radius:14px;padding:12px}
+.k{font-size:12px;color:var(--muted);margin-bottom:4px;text-transform:uppercase}
+.v{font-size:18px;font-weight:700;word-break:break-word}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;color:#cbd5e1;text-transform:uppercase}
+.note{font-size:13px;color:#dbe7fb;background:#0f1727;border-left:4px solid var(--warn);padding:10px 12px;border-radius:10px;line-height:1.45}
+.error{background:#2a1014;border:1px solid #7f1d1d;color:#fecaca;border-radius:12px;padding:12px;display:none;white-space:pre-wrap}
+pre{background:#09101d;border:1px solid var(--line);border-radius:12px;padding:12px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.small{font-size:12px;color:var(--muted)}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px;background:#0b1322}
+@media (min-width:980px){.two{grid-template-columns:1.1fr .9fr}.toolbar{grid-template-columns:repeat(4,1fr)}.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Watch AI Safari HTTPS V3</h1>
+  <p>Versione con controlli aggiuntivi: multi-crop, voto AI, filtro geometrico, centro manuale e pesi diversi per quadranti difficili.</p>
+
+  <div class="two">
+    <div>
+      <div class="panel">
+        <h2>1. Fotocamera</h2>
+        <div class="videoWrap">
+          <video id="video" autoplay playsinline muted></video>
+          <canvas id="canvas" style="display:none"></canvas>
+        </div>
+        <div class="toolbar">
+          <button id="startCameraBtn">Avvia camera</button>
+          <button id="captureBtn" class="ok">Scatta foto</button>
+          <button id="retakeBtn" class="secondary">Rifai foto</button>
+          <button id="analyzeBtn" class="warn">Analizza AI</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="k">Ora reale scatto</div><div class="v" id="shotTs">—</div></div>
+          <div class="stat"><div class="k">Stato</div><div class="v" id="state">In attesa</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>2. Controlli avanzati</h2>
+        <div class="row4">
+          <div class="field"><label>Contrasto</label><input id="contrastRange" type="range" min="0.7" max="2.4" step="0.05" value="1.30"></div>
+          <div class="field"><label>Nitidezza</label><input id="sharpRange" type="range" min="0" max="2.5" step="0.05" value="0.90"></div>
+          <div class="field"><label>Crop base (%)</label><input id="cropRange" type="range" min="50" max="96" step="1" value="82"></div>
+          <div class="field"><label>Numero voti AI</label><select id="votesSelect"><option value="1">1</option><option value="3" selected>3</option><option value="5">5</option></select></div>
+        </div>
+        <div class="row4">
+          <div class="field"><label>Centro X (%)</label><input id="centerXRange" type="range" min="0" max="100" step="0.5" value="50"></div>
+          <div class="field"><label>Centro Y (%)</label><input id="centerYRange" type="range" min="0" max="100" step="0.5" value="50"></div>
+          <div class="field"><label>Centro manuale</label><select id="useManualCenter"><option value="no" selected>No</option><option value="yes">Sì</option></select></div>
+          <div class="field"><label>Secondi presenti</label><select id="secondsMode"><option value="auto" selected>Auto</option><option value="yes">Sì</option><option value="no">No</option></select></div>
+        </div>
+        <div class="row4">
+          <div class="field"><label>Tipo quadrante</label><select id="dialType"><option value="generic" selected>Generico</option><option value="clean">Pulito / minimal</option><option value="busy">Molto carico</option><option value="skeleton">Scheletrato</option><option value="subdials">Con sottquadranti</option></select></div>
+          <div class="field"><label>Mostra guide</label><select id="showGuides"><option value="yes" selected>Sì</option><option value="no">No</option></select></div>
+          <div class="field"><label>Vincolo geometrico</label><select id="geoCheck"><option value="yes" selected>Sì</option><option value="no">No</option></select></div>
+          <div class="field"><label>Peso confidenza</label><input id="confidenceWeight" type="range" min="0" max="100" step="5" value="60"></div>
+        </div>
+        <div class="toolbar">
+          <button id="previewBtn" class="secondary">Anteprima filtri</button>
+          <button id="resetFiltersBtn" class="secondary">Reset controlli</button>
+          <button id="copyAiTimeBtn" class="secondary">Copia ora AI</button>
+          <button id="clearAiBtn" class="bad">Pulisci AI</button>
+        </div>
+        <div class="note" style="margin-top:10px">
+          Nuovi controlli utili: 3 voti AI con crop diversi, centro manuale se il perno non è trovato bene, e opzione “secondi assenti” per evitare che l’AI inventi una lancetta.
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>3. Risultato AI</h2>
+        <div class="stats">
+          <div class="stat"><div class="k">Ora AI</div><div class="v" id="aiTime">—</div></div>
+          <div class="stat"><div class="k">Confidenza</div><div class="v" id="aiConfidence">—</div></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="k">Ore</div><div class="v" id="hourHand">—</div></div>
+          <div class="stat"><div class="k">Minuti</div><div class="v" id="minuteHand">—</div></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="k">Secondi</div><div class="v" id="secondHand">—</div></div>
+          <div class="stat"><div class="k">Centro quadrante</div><div class="v" id="dialCenter">—</div></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="k">Scarto geometrico</div><div class="v" id="geoScore">—</div></div>
+          <div class="stat"><div class="k">Metodo usato</div><div class="v" id="methodUsed">—</div></div>
+        </div>
+        <div id="errorBox" class="error"></div>
+        <h3 style="margin-top:12px">Risposta grezza</h3>
+        <pre id="rawOut">—</pre>
+      </div>
+
+      <div class="panel">
+        <h2>4. Grafico andamento</h2>
+        <canvas id="trendChart" height="260"></canvas>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h2>5. Configurazione AI</h2>
+        <div class="field"><label>Endpoint</label><input id="endpoint" value="https://api.openai.com/v1/responses"></div>
+        <div class="field"><label>Modello</label><input id="model" value="gpt-4.1-mini"></div>
+        <div class="field"><label>API key</label><input id="apiKey" type="password" placeholder="Inserisci la tua API key"></div>
+        <div class="field"><label>Prompt AI</label><textarea id="instructions">Analizza l'immagine di un orologio analogico. Devi trovare centro quadrante, punte delle lancette ore/minuti/secondi e stimare l'ora. Rispondi SOLO con JSON valido:
+{
+  "dial_detected": true,
+  "dial_center": {"x_pct": 50, "y_pct": 50},
+  "time": {"hour": 0, "minute": 0, "second": 0},
+  "hour_hand": {"angle_deg": 0, "x_tip_pct": 0, "y_tip_pct": 0},
+  "minute_hand": {"angle_deg": 0, "x_tip_pct": 0, "y_tip_pct": 0},
+  "second_hand": {"angle_deg": 0, "x_tip_pct": 0, "y_tip_pct": 0, "present": true},
+  "confidence": 0.0,
+  "notes": ""
+}</textarea></div>
+        <div class="toolbar">
+          <button id="testBtn">Test AI</button>
+          <button id="copyJsonBtn" class="secondary">Copia JSON</button>
+          <button id="saveJsonBtn" class="warn">Salva JSON</button>
+          <button id="resetBtn" class="secondary">Reset tutto</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>6. Sessione</h2>
+        <div class="field"><label>Nome orologio</label><input id="watchName" placeholder="Es. Rolex Datejust 36"></div>
+        <div class="field"><label>Carica JSON</label><input id="fileLoader" type="file" accept=".json,application/json"></div>
+        <div class="field"><label>Ora dell'orologio</label><div class="row3"><input id="h" placeholder="HH"><input id="m" placeholder="MM"><input id="s" placeholder="SS"></div></div>
+        <div class="field"><label>Note</label><textarea id="notes" placeholder="Es. controllo mattina"></textarea></div>
+        <div class="toolbar">
+          <button id="newBtn" class="ok">Nuova sessione</button>
+          <button id="saveMeasureBtn">Salva misura</button>
+          <button id="loadAiToManualBtn" class="secondary">Carica AI nei campi</button>
+          <button id="clearSessionBtn" class="bad">Pulisci sessione</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="k">Ora letta</div><div class="v" id="manualTime">—</div></div>
+          <div class="stat"><div class="k">Delta corrente</div><div class="v" id="deltaOut">—</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>7. Storico</h2>
+        <table><thead><tr><th>#</th><th>Data</th><th>Ora</th><th>Delta</th><th>Fonte</th></tr></thead><tbody id="history"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const video=document.getElementById("video"), canvas=document.getElementById("canvas"), ctx=canvas.getContext("2d");
+const shotTs=document.getElementById("shotTs"), stateEl=document.getElementById("state"), aiTimeEl=document.getElementById("aiTime"), aiConfidenceEl=document.getElementById("aiConfidence"), hourHandEl=document.getElementById("hourHand"), minuteHandEl=document.getElementById("minuteHand"), secondHandEl=document.getElementById("secondHand"), dialCenterEl=document.getElementById("dialCenter"), geoScoreEl=document.getElementById("geoScore"), methodUsedEl=document.getElementById("methodUsed"), rawOutEl=document.getElementById("rawOut"), errorBox=document.getElementById("errorBox");
+const endpointEl=document.getElementById("endpoint"), modelEl=document.getElementById("model"), apiKeyEl=document.getElementById("apiKey"), instructionsEl=document.getElementById("instructions");
+const contrastRange=document.getElementById("contrastRange"), sharpRange=document.getElementById("sharpRange"), cropRange=document.getElementById("cropRange"), votesSelect=document.getElementById("votesSelect"), centerXRange=document.getElementById("centerXRange"), centerYRange=document.getElementById("centerYRange"), useManualCenter=document.getElementById("useManualCenter"), secondsMode=document.getElementById("secondsMode"), dialType=document.getElementById("dialType"), showGuides=document.getElementById("showGuides"), geoCheck=document.getElementById("geoCheck"), confidenceWeight=document.getElementById("confidenceWeight");
+const watchNameEl=document.getElementById("watchName"), fileLoader=document.getElementById("fileLoader"), hEl=document.getElementById("h"), mEl=document.getElementById("m"), sEl=document.getElementById("s"), notesEl=document.getElementById("notes"), manualTimeEl=document.getElementById("manualTime"), deltaOutEl=document.getElementById("deltaOut"), historyEl=document.getElementById("history"), trendChart=document.getElementById("trendChart"), trendCtx=trendChart.getContext("2d");
+let mediaStream=null, capture=null, lastAI=null, data={watch:"",measurements:[]};
+
+function pad(v){return String(v).padStart(2,"0")}
+function secOfDay(d){return d.getHours()*3600+d.getMinutes()*60+d.getSeconds()}
+function hmsToSec(h,m,s){return h*3600+m*60+s}
+function delta(real,watch){let d=watch-real;if(d>43200)d-=86400;if(d<-43200)d+=86400;return d}
+function signedText(sec){const sign=sec>=0?"+":"-";const abs=Math.abs(Math.round(sec));const hh=Math.floor(abs/3600),mm=Math.floor((abs%3600)/60),ss=abs%60;return `${sign}${pad(hh)}:${pad(mm)}:${pad(ss)} (${Math.round(sec)} s)`}
+function showError(msg){errorBox.style.display="block";errorBox.textContent=msg}
+function clearError(){errorBox.style.display="none";errorBox.textContent=""}
+function updateManualReadout(){const hh=parseInt(hEl.value),mm=parseInt(mEl.value),ss=parseInt(sEl.value);if([hh,mm,ss].some(Number.isNaN)){manualTimeEl.innerText="—";deltaOutEl.innerText="—";return;}manualTimeEl.innerText=`${pad(hh)}:${pad(mm)}:${pad(ss)}`;deltaOutEl.innerText=capture?signedText(delta(secOfDay(capture.shot),hmsToSec(hh,mm,ss))):"—";}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+function currentCenter(){if(useManualCenter.value==="yes") return {x_pct:parseFloat(centerXRange.value),y_pct:parseFloat(centerYRange.value)}; if(lastAI?.dial_center) return lastAI.dial_center; return {x_pct:50,y_pct:50};}
+function pctToXY(obj){if(!obj||obj.x_tip_pct==null||obj.y_tip_pct==null) return null; return {x:canvas.width*obj.x_tip_pct/100,y:canvas.height*obj.y_tip_pct/100};}
+function drawGuides(){if(showGuides.value!=="yes") return; const c=currentCenter(); const cx=canvas.width*c.x_pct/100, cy=canvas.height*c.y_pct/100; const cropPct=parseFloat(cropRange.value)/100; const rw=canvas.width*cropPct/2, rh=canvas.height*cropPct/2; ctx.strokeStyle="rgba(255,213,74,.9)"; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(cx,cy,8,0,Math.PI*2); ctx.stroke(); ctx.strokeStyle="rgba(255,255,255,.45)"; ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,canvas.height); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(canvas.width,cy); ctx.stroke(); ctx.strokeStyle="rgba(80,220,255,.7)"; ctx.strokeRect(cx-rw, cy-rh, rw*2, rh*2);}
+function redrawCapture(){if(!capture?.baseImageDataUrl) return; const img=new Image(); img.onload=()=>{canvas.width=img.width; canvas.height=img.height; ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0,canvas.width,canvas.height); drawGuides(); if(lastAI){const c=currentCenter(); const cx=canvas.width*(c.x_pct??50)/100, cy=canvas.height*(c.y_pct??50)/100; const drawHand=(hand,color,width)=>{const tip=pctToXY(hand); if(!tip) return; ctx.strokeStyle=color; ctx.lineWidth=width; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(tip.x,tip.y); ctx.stroke();}; drawHand(lastAI.hour_hand,"#ff6b6b",5); drawHand(lastAI.minute_hand,"#4ade80",4); if(!lastAI.second_hand||lastAI.second_hand.present!==false) drawHand(lastAI.second_hand,"#60a5fa",2);}}; img.src=capture.baseImageDataUrl;}
+function preprocessToCanvas(sourceCanvas, contrast, sharp){const c=document.createElement("canvas"); c.width=sourceCanvas.width; c.height=sourceCanvas.height; const cctx=c.getContext("2d"); cctx.drawImage(sourceCanvas,0,0); const img=cctx.getImageData(0,0,c.width,c.height); const d=img.data; for(let i=0;i<d.length;i+=4){for(let k=0;k<3;k++){let v=((d[i+k]-128)*contrast)+128; d[i+k]=clamp(v,0,255);}} cctx.putImageData(img,0,0); if(sharp>0){const src=cctx.getImageData(0,0,c.width,c.height), out=cctx.createImageData(c.width,c.height); const s=src.data,o=out.data,w=c.width,h=c.height,amt=sharp; for(let y=1;y<h-1;y++){for(let x=1;x<w-1;x++){const idx=(y*w+x)*4; for(let k=0;k<3;k++){const center=s[idx+k]*5, up=s[((y-1)*w+x)*4+k], down=s[((y+1)*w+x)*4+k], left=s[(y*w+x-1)*4+k], right=s[(y*w+x+1)*4+k]; const val=s[idx+k]+amt*(center-up-down-left-right); o[idx+k]=clamp(val,0,255);} o[idx+3]=255;}} cctx.putImageData(out,0,0);} return c;}
+function cropCanvas(sourceCanvas, center, cropPct){const c=document.createElement("canvas"); const sx=sourceCanvas.width*(center.x_pct/100), sy=sourceCanvas.height*(center.y_pct/100), halfW=sourceCanvas.width*(cropPct/100)/2, halfH=sourceCanvas.height*(cropPct/100)/2; const x=clamp(Math.round(sx-halfW),0,sourceCanvas.width-1), y=clamp(Math.round(sy-halfH),0,sourceCanvas.height-1), w=clamp(Math.round(halfW*2),1,sourceCanvas.width-x), h=clamp(Math.round(halfH*2),1,sourceCanvas.height-y); c.width=w; c.height=h; c.getContext("2d").drawImage(sourceCanvas,x,y,w,h,0,0,w,h); return {canvas:c,crop:{x,y,w,h}};}
+function extractTextFromResponse(data){if(typeof data.output_text==="string"&&data.output_text.trim()) return data.output_text.trim(); if(Array.isArray(data.output)){const texts=[]; for(const item of data.output){if(Array.isArray(item.content)){for(const c of item.content){if(c.type==="output_text"&&c.text) texts.push(c.text);}}} if(texts.length) return texts.join("\\n").trim();} return JSON.stringify(data,null,2);}
+function extractJson(text){const trimmed=text.trim(); try{return JSON.parse(trimmed);}catch(e){} const match=trimmed.match(/\\{[\\s\\S]*\\}/); if(match) return JSON.parse(match[0]); throw new Error("JSON non trovato nella risposta");}
+function angleErr(a,b){let d=Math.abs((a??0)-(b??0))%360; return Math.min(d,360-d);}
+function computeGeoScore(obj){if(!obj?.time||!obj.hour_hand||!obj.minute_hand) return 999; const t=obj.time; const expMinute=(t.minute*6)+(t.second||0)*0.1; const expHour=((t.hour%12)*30)+(t.minute*0.5)+(t.second||0)*(0.5/60); let err=angleErr(obj.minute_hand.angle_deg,expMinute)*1.0 + angleErr(obj.hour_hand.angle_deg,expHour)*1.5; if(secondsMode.value==="yes" && obj.second_hand && obj.second_hand.present!==false){const expSecond=(t.second||0)*6; err+=angleErr(obj.second_hand.angle_deg,expSecond)*0.6;} return Math.round(err*10)/10;}
+function normalizeObj(obj,crop,fullW,fullH){if(!obj) return obj; const mapHand=(hand)=>{if(!hand||hand.x_tip_pct==null||hand.y_tip_pct==null) return hand; return {...hand,x_tip_pct:((crop.x+(crop.w*hand.x_tip_pct/100))/fullW)*100,y_tip_pct:((crop.y+(crop.h*hand.y_tip_pct/100))/fullH)*100};}; const center=obj.dial_center?{x_pct:((crop.x+(crop.w*obj.dial_center.x_pct/100))/fullW)*100,y_pct:((crop.y+(crop.h*obj.dial_center.y_pct/100))/fullH)*100}:null; return {...obj,dial_center:center||obj.dial_center,hour_hand:mapHand(obj.hour_hand),minute_hand:mapHand(obj.minute_hand),second_hand:mapHand(obj.second_hand)};}
+function buildPrompt(basePrompt){let extra=`\\nVincoli aggiuntivi:\\n- tipo quadrante: ${dialType.value}\\n- lancetta secondi: ${secondsMode.value}\\n- se secondi=no, imposta second_hand.present=false\\n- privilegia coerenza geometrica tra angoli e ora letta\\n- non inventare lancette se non sicure\\n`; return basePrompt + extra;}
+async function startCamera(){try{if(!window.isSecureContext) throw new Error("Pagina non in secure context. Aprila da HTTPS in Safari."); if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) throw new Error("getUserMedia non disponibile"); if(mediaStream){mediaStream.getTracks().forEach(t=>t.stop()); mediaStream=null;} mediaStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false}); video.srcObject=mediaStream; video.style.display="block"; canvas.style.display="none"; capture=null; shotTs.innerText="—"; stateEl.innerText="Camera attiva"; clearError();}catch(err){showError("Camera: "+err.message); stateEl.innerText="Errore camera";}}
+function capturePhoto(){if(!video.videoWidth){alert("Camera non pronta");return;} canvas.width=video.videoWidth; canvas.height=video.videoHeight; ctx.drawImage(video,0,0); capture={shot:new Date(),baseImageDataUrl:canvas.toDataURL("image/jpeg",0.92)}; shotTs.innerText=capture.shot.toLocaleString(); stateEl.innerText="Foto acquisita"; video.style.display="none"; canvas.style.display="block"; redrawCapture(); updateManualReadout();}
+function retakePhoto(){capture=null; video.style.display="block"; canvas.style.display="none"; shotTs.innerText="—"; stateEl.innerText=mediaStream?"Camera attiva":"In attesa"; clearAI(); updateManualReadout();}
+async function callAI(dataUrl,prompt){const apiKey=(apiKeyEl.value||"").trim(), endpoint=endpointEl.value.trim(), model=modelEl.value.trim(); if(!apiKey) throw new Error("Inserisci la API key"); const payload={model,input:[{role:"user",content:[{type:"input_text",text:prompt},{type:"input_image",image_url:dataUrl}]}]}; const res=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${apiKey}`},body:JSON.stringify(payload)}); const data=await res.json(); if(!res.ok){showError(JSON.stringify(data,null,2)); throw new Error(data.error?.message||`Errore HTTP ${res.status}`);} return data;}
+function scoreCandidate(obj){const conf=(obj.confidence!=null?Number(obj.confidence):0)*100; const geo=geoCheck.value==="yes"?computeGeoScore(obj):0; const score=(Number(confidenceWeight.value)/100)*conf - ((100-Number(confidenceWeight.value))/100)*geo; return {score:Math.round(score*10)/10, geo};}
+function renderAI(obj,raw,method){lastAI=obj; rawOutEl.textContent=raw||JSON.stringify(obj,null,2); aiTimeEl.innerText=obj.time?`${pad(obj.time.hour??0)}:${pad(obj.time.minute??0)}:${pad(obj.time.second??0)}`:"—"; aiConfidenceEl.innerText=obj.confidence!=null?String(obj.confidence):"—"; dialCenterEl.innerText=obj.dial_center?`x ${Number(obj.dial_center.x_pct).toFixed(1)}% y ${Number(obj.dial_center.y_pct).toFixed(1)}%`:"—"; function handText(h){if(!h) return "—"; if(h.present===false) return "Assente"; const angle=h.angle_deg!=null?`${h.angle_deg}°`:"—"; const xy=(h.x_tip_pct!=null&&h.y_tip_pct!=null)?` | x ${Number(h.x_tip_pct).toFixed(1)}% y ${Number(h.y_tip_pct).toFixed(1)}%`:""; return angle+xy;} hourHandEl.innerText=handText(obj.hour_hand); minuteHandEl.innerText=handText(obj.minute_hand); secondHandEl.innerText=handText(obj.second_hand); geoScoreEl.innerText=computeGeoScore(obj); methodUsedEl.innerText=method; if(obj.dial_center&&useManualCenter.value!=="yes"){centerXRange.value=Number(obj.dial_center.x_pct).toFixed(1); centerYRange.value=Number(obj.dial_center.y_pct).toFixed(1);} redrawCapture();}
+async function analyzeAI(){try{if(!capture?.baseImageDataUrl) throw new Error("Scatta prima una foto"); clearError(); stateEl.innerText="Analisi AI in corso..."; const contrast=parseFloat(contrastRange.value), sharp=parseFloat(sharpRange.value), cropBase=parseFloat(cropRange.value), votes=parseInt(votesSelect.value); const img=new Image(); await new Promise((resolve,reject)=>{img.onload=resolve; img.onerror=reject; img.src=capture.baseImageDataUrl;}); const base=document.createElement("canvas"); base.width=img.width; base.height=img.height; base.getContext("2d").drawImage(img,0,0); const pre=preprocessToCanvas(base,contrast,sharp); const center=currentCenter(); const variants=[]; if(votes===1) variants.push(cropBase); if(votes===3) variants.push(cropBase-4,cropBase,cropBase+4); if(votes===5) variants.push(cropBase-6,cropBase-3,cropBase,cropBase+3,cropBase+6); const candidates=[]; let rawParts=[]; for(const cropPct of variants){const cropped=cropCanvas(pre,center,clamp(cropPct,45,96)); const prompt=buildPrompt(instructionsEl.value.trim()); const resp=await callAI(cropped.canvas.toDataURL("image/jpeg",0.92),prompt); const raw=extractTextFromResponse(resp); let obj=extractJson(raw); obj=normalizeObj(obj,cropped.crop,pre.width,pre.height); const scoring=scoreCandidate(obj); obj._score=scoring.score; obj._geo=scoring.geo; candidates.push(obj); rawParts.push(`CROP ${Math.round(cropPct)}% | score ${scoring.score} | geo ${scoring.geo}\\n${raw}`);} candidates.sort((a,b)=>b._score-a._score); const best=candidates[0]; renderAI(best,rawParts.join("\\n\\n================\\n\\n"),`${votes} voti | best score ${best._score}`); stateEl.innerText="Analisi completata";}catch(err){if(!errorBox.textContent) showError(String(err.message||err)); stateEl.innerText="Errore AI";}}
+async function testAI(){try{const apiKey=(apiKeyEl.value||"").trim(); if(!apiKey) throw new Error("Inserisci la API key"); clearError(); stateEl.innerText="Test AI..."; const endpoint=endpointEl.value.trim(), model=modelEl.value.trim(); const payload={model,input:"Rispondi solo con OK"}; const res=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${apiKey}`},body:JSON.stringify(payload)}); const data=await res.json(); rawOutEl.textContent=JSON.stringify(data,null,2); if(!res.ok){showError(JSON.stringify(data,null,2)); throw new Error(data.error?.message||`Errore HTTP ${res.status}`);} stateEl.innerText="Test connessione OK";}catch(err){if(!errorBox.textContent) showError(String(err.message||err)); stateEl.innerText="Test fallito";}}
+function clearAI(){lastAI=null; aiTimeEl.innerText="—"; aiConfidenceEl.innerText="—"; hourHandEl.innerText="—"; minuteHandEl.innerText="—"; secondHandEl.innerText="—"; dialCenterEl.innerText="—"; geoScoreEl.innerText="—"; methodUsedEl.innerText="—"; rawOutEl.textContent="—"; clearError(); if(capture?.baseImageDataUrl) redrawCapture();}
+function copyJSON(){const txt=lastAI?JSON.stringify(lastAI,null,2):rawOutEl.textContent; navigator.clipboard.writeText(txt).then(()=>stateEl.innerText="JSON copiato");}
+function loadAiToManual(){if(!lastAI?.time){alert("Nessun risultato AI");return;} hEl.value=pad(lastAI.time.hour??0); mEl.value=pad(lastAI.time.minute??0); sEl.value=pad(lastAI.time.second??0); updateManualReadout(); stateEl.innerText="Ora AI copiata";}
+function newSession(){data={watch:watchNameEl.value.trim(),measurements:[]}; renderHistory(); drawTrend(); stateEl.innerText="Nuova sessione pronta";}
+function buildMeasurement(){if(!capture) throw new Error("Scatta prima una foto"); const hh=parseInt(hEl.value),mm=parseInt(mEl.value),ss=parseInt(sEl.value); if([hh,mm,ss].some(Number.isNaN)) throw new Error("Inserisci ora valida"); const watchSec=hmsToSec(hh,mm,ss); return {real:capture.shot.getTime(),real_iso:capture.shot.toISOString(),watch:watchSec,watch_text:`${pad(hh)}:${pad(mm)}:${pad(ss)}`,delta:delta(secOfDay(capture.shot),watchSec),source:lastAI?.time?"AI+manuale":"manuale",ai:lastAI||null,notes:notesEl.value.trim()};}
+function saveMeasurement(){try{if(!data||!Array.isArray(data.measurements)) data={watch:watchNameEl.value.trim(),measurements:[]}; if(!data.watch) data.watch=watchNameEl.value.trim()||"Orologio"; data.measurements.push(buildMeasurement()); renderHistory(); drawTrend(); stateEl.innerText="Misura salvata";}catch(err){alert(err.message);}}
+function renderHistory(){historyEl.innerHTML=""; if(!data.measurements||data.measurements.length===0){historyEl.innerHTML='<tr><td colspan="5">Nessuna misura</td></tr>'; return;} data.measurements.forEach((m,i)=>{const tr=document.createElement("tr"); tr.innerHTML=`<td>${i+1}</td><td>${new Date(m.real).toLocaleString()}</td><td>${m.watch_text}</td><td>${m.delta}s</td><td>${m.source||"-"}</td>`; historyEl.appendChild(tr);});}
+function fitChart(){const rect=trendChart.parentElement.getBoundingClientRect(); trendChart.width=Math.max(320,Math.floor(rect.width-4)); trendChart.height=260;}
+function drawTrend(){fitChart(); trendCtx.clearRect(0,0,trendChart.width,trendChart.height); if(!data.measurements||data.measurements.length===0){trendCtx.fillStyle="#94a3b8"; trendCtx.font="16px Arial"; trendCtx.fillText("Nessun dato disponibile",20,30); return;} const measures=data.measurements,deltas=measures.map(m=>m.delta),perDay=[null]; for(let i=1;i<measures.length;i++){const drift=measures[i].delta-measures[i-1].delta,days=(measures[i].real-measures[i-1].real)/86400000; perDay.push(days>0?drift/days:0);} const vals=deltas.concat(perDay.filter(v=>v!==null)); let min=Math.min(...vals,-10),max=Math.max(...vals,10); if(min===max){min-=1;max+=1;} const padY=(max-min)*0.15; min-=padY;max+=padY; const left=44,right=10,top=12,bottom=28,w=trendChart.width-left-right,h=trendChart.height-top-bottom; function xPos(i){return measures.length===1?left+w/2:left+i*w/(measures.length-1)} function yPos(v){return top+(max-v)*h/(max-min)} trendCtx.strokeStyle="#334155"; trendCtx.fillStyle="#94a3b8"; trendCtx.font="11px Arial"; for(let g=0;g<=4;g++){const y=top+g*h/4,val=max-g*(max-min)/4; trendCtx.beginPath(); trendCtx.moveTo(left,y); trendCtx.lineTo(left+w,y); trendCtx.stroke(); trendCtx.fillText(Math.round(val)+" s",4,y+4);} if(min<0&&max>0){const yz=yPos(0); trendCtx.strokeStyle="#64748b"; trendCtx.beginPath(); trendCtx.moveTo(left,yz); trendCtx.lineTo(left+w,yz); trendCtx.stroke();} trendCtx.strokeStyle="#cbd5e1"; trendCtx.beginPath(); trendCtx.moveTo(left,top); trendCtx.lineTo(left,top+h); trendCtx.lineTo(left+w,top+h); trendCtx.stroke(); trendCtx.strokeStyle="#38bdf8"; trendCtx.lineWidth=2; trendCtx.beginPath(); deltas.forEach((v,i)=>{const x=xPos(i),y=yPos(v); if(i===0) trendCtx.moveTo(x,y); else trendCtx.lineTo(x,y);}); trendCtx.stroke(); trendCtx.fillStyle="#38bdf8"; deltas.forEach((v,i)=>{const x=xPos(i),y=yPos(v); trendCtx.beginPath(); trendCtx.arc(x,y,4,0,Math.PI*2); trendCtx.fill();}); if(measures.length>1){trendCtx.strokeStyle="#f59e0b"; trendCtx.lineWidth=2; trendCtx.beginPath(); perDay.forEach((v,i)=>{if(v===null)return; const x=xPos(i),y=yPos(v); if(i===1) trendCtx.moveTo(x,y); else trendCtx.lineTo(x,y);}); trendCtx.stroke(); trendCtx.fillStyle="#f59e0b"; perDay.forEach((v,i)=>{if(v===null)return; const x=xPos(i),y=yPos(v); trendCtx.fillRect(x-3,y-3,6,6);});}}
+function saveJSON(){const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=(data.watch||"watch")+"_ai_safari_https_v3.json"; a.click();}
+function loadSession(e){const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=function(){data=JSON.parse(reader.result); watchNameEl.value=data.watch||""; renderHistory(); drawTrend(); stateEl.innerText="Sessione caricata";}; reader.readAsText(file);}
+function previewFilters(){if(!capture?.baseImageDataUrl){alert("Scatta prima una foto");return;} const img=new Image(); img.onload=()=>{const base=document.createElement("canvas"); base.width=img.width; base.height=img.height; base.getContext("2d").drawImage(img,0,0); const pre=preprocessToCanvas(base,parseFloat(contrastRange.value),parseFloat(sharpRange.value)); capture.baseImageDataUrl=pre.toDataURL("image/jpeg",0.92); redrawCapture(); stateEl.innerText="Anteprima filtri applicata";}; img.src=capture.baseImageDataUrl;}
+function resetFilters(){contrastRange.value="1.30"; sharpRange.value="0.90"; cropRange.value="82"; votesSelect.value="3"; centerXRange.value="50"; centerYRange.value="50"; useManualCenter.value="no"; secondsMode.value="auto"; dialType.value="generic"; showGuides.value="yes"; geoCheck.value="yes"; confidenceWeight.value="60"; redrawCapture(); stateEl.innerText="Controlli resettati";}
+function clearSession(){data={watch:watchNameEl.value.trim(),measurements:[]}; renderHistory(); drawTrend(); stateEl.innerText="Sessione pulita";}
+function resetAll(){capture=null; lastAI=null; data={watch:"",measurements:[]}; watchNameEl.value=""; hEl.value=""; mEl.value=""; sEl.value=""; notesEl.value=""; fileLoader.value=""; shotTs.innerText="—"; stateEl.innerText=mediaStream?"Camera attiva":"In attesa"; video.style.display="block"; canvas.style.display="none"; clearAI(); updateManualReadout(); renderHistory(); drawTrend(); resetFilters();}
+document.getElementById("startCameraBtn").onclick=startCamera;
+document.getElementById("captureBtn").onclick=capturePhoto;
+document.getElementById("retakeBtn").onclick=retakePhoto;
+document.getElementById("analyzeBtn").onclick=analyzeAI;
+document.getElementById("previewBtn").onclick=previewFilters;
+document.getElementById("resetFiltersBtn").onclick=resetFilters;
+document.getElementById("copyAiTimeBtn").onclick=loadAiToManual;
+document.getElementById("clearAiBtn").onclick=clearAI;
+document.getElementById("testBtn").onclick=testAI;
+document.getElementById("copyJsonBtn").onclick=copyJSON;
+document.getElementById("saveJsonBtn").onclick=saveJSON;
+document.getElementById("newBtn").onclick=newSession;
+document.getElementById("saveMeasureBtn").onclick=saveMeasurement;
+document.getElementById("loadAiToManualBtn").onclick=loadAiToManual;
+document.getElementById("clearSessionBtn").onclick=clearSession;
+document.getElementById("resetBtn").onclick=resetAll;
+fileLoader.onchange=loadSession;
+[hEl,mEl,sEl].forEach(el=>el.addEventListener("input",updateManualReadout));
+[centerXRange,centerYRange,showGuides,useManualCenter].forEach(el=>el.addEventListener("input",redrawCapture));
+window.addEventListener("resize",drawTrend);
+renderHistory(); drawTrend(); updateManualReadout();
+</script>
+</body>
+</html>
